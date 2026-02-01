@@ -1,0 +1,92 @@
+import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, Index, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { User } from '../../users/entities/user.entity';
+import type { Point } from 'geojson';
+
+export enum Gender {
+    MALE = 'male',
+    FEMALE = 'female',
+    NON_BINARY = 'non_binary',
+}
+
+export enum Orientation {
+    HETEROSEXUAL = 'heterosexual',
+    HOMOSEXUAL = 'homosexual',
+    BISEXUAL = 'bisexual',
+    PANSEXUAL = 'pansexual',
+    ASEXUAL = 'asexual',
+    OTHER = 'other',
+}
+
+export enum LookingFor {
+    RELATIONSHIP = 'relationship',
+    CASUAL = 'casual',
+    FRIENDS = 'friends',
+    NETWORKING = 'networking',
+    UNSPECIFIED = 'unspecified',
+}
+
+export enum LocationMode {
+    PRECISE = 'precise',
+    APPROXIMATE = 'approximate',
+    MANUAL = 'manual',
+}
+
+@Entity('profiles')
+export class Profile {
+    @PrimaryGeneratedColumn('uuid')
+    user_id: string; // Helper for PK, though it is a JoinColumn
+
+    @OneToOne(() => User, (user) => user.profile, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'user_id' })
+    user: User;
+
+    @Column()
+    name: string;
+
+    @Column({ type: 'date' })
+    @Index('idx_profiles_birthdate')
+    birthdate: Date;
+
+    @Column({ type: 'enum', enum: Gender })
+    gender: Gender;
+
+    @Column({ type: 'enum', enum: Orientation })
+    orientation: Orientation;
+
+    @Column('text')
+    bio: string;
+
+    @Column({ type: 'enum', enum: LookingFor, default: LookingFor.UNSPECIFIED })
+    looking_for: LookingFor;
+
+    @Column({ type: 'enum', enum: LocationMode, default: LocationMode.APPROXIMATE })
+    location_mode: LocationMode;
+
+    @Column({ name: 'location_text' })
+    locationText: string;
+
+    @Column('double precision', { nullable: true })
+    lat: number;
+
+    @Column('double precision', { nullable: true })
+    lon: number;
+
+    @Index('idx_profiles_geom', { spatial: true })
+    @Column({
+        type: 'geography',
+        spatialFeatureType: 'Point',
+        srid: 4326,
+        nullable: true,
+    })
+    geom: Point;
+
+    @Column({ default: false, name: 'is_onboarded' })
+    @Index('idx_profiles_onboarded', { where: 'is_onboarded = true' })
+    isOnboarded: boolean;
+
+    @CreateDateColumn({ name: 'created_at' })
+    createdAt: Date;
+
+    @UpdateDateColumn({ name: 'updated_at' })
+    updatedAt: Date;
+}

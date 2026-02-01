@@ -1,0 +1,25 @@
+import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { ProfilesService } from './profiles.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+
+@Controller('profiles')
+@UseGuards(JwtAuthGuard)
+export class ProfilesController {
+    constructor(private readonly profilesService: ProfilesService) { }
+
+    @Get('me')
+    async getMe(@Request() req) {
+        return this.profilesService.getMyProfile(req.user.id);
+    }
+
+    @Post('me')
+    async updateMe(@Request() req, @Body() dto: UpdateProfileDto) {
+        return this.profilesService.update(req.user.id, dto);
+    }
+
+    @Post('photos')
+    async addPhoto(@Request() req, @Body() body: { url: string; publicId: string }) {
+        return this.profilesService.addPhoto(req.user.id, body.url, body.publicId);
+    }
+}
