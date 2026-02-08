@@ -20,10 +20,24 @@ export class ProfilesService {
     ) { }
 
     async getMyProfile(userId: string) {
-        return this.profilesRepo.findOne({
+        let profile = await this.profilesRepo.findOne({
             where: { user_id: userId },
-            relations: ['user', 'user.photos'], // adjust as needed
+            relations: ['user', 'user.photos'],
         });
+
+        if (!profile) {
+            // Self-healing: Create profile if missing
+            const newProfile = this.profilesRepo.create({ user_id: userId });
+            await this.profilesRepo.save(newProfile);
+
+            // Refetch with relations
+            profile = await this.profilesRepo.findOne({
+                where: { user_id: userId },
+                relations: ['user', 'user.photos'],
+            });
+        }
+
+        return profile;
     }
 
     async update(userId: string, dto: UpdateProfileDto) {

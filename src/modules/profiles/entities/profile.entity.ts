@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, Index, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryColumn, Column, OneToOne, JoinColumn, Index, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import type { Point } from 'geojson';
 
@@ -34,7 +34,7 @@ export enum LocationMode {
 
 @Entity('profiles')
 export class Profile {
-    @PrimaryGeneratedColumn('uuid')
+    @PrimaryColumn('uuid')
     user_id: string; // Helper for PK, though it is a JoinColumn
 
     @OneToOne(() => User, (user) => user.profile, { onDelete: 'CASCADE' })
