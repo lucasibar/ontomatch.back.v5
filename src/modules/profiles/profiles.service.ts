@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Profile } from './entities/profile.entity';
+import { Profile, Gender } from './entities/profile.entity';
 import { ProfilePhoto } from './entities/profile-photo.entity';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { Location } from '../locations/entities/location.entity';
@@ -27,7 +27,13 @@ export class ProfilesService {
 
         if (!profile) {
             // Self-healing: Create profile if missing
-            const newProfile = this.profilesRepo.create({ user_id: userId });
+            const newProfile = this.profilesRepo.create({
+                user_id: userId,
+                name: 'New User',
+                birthdate: new Date('2000-01-01'),
+                gender: Gender.OTHER,
+                bio: '',
+            });
             await this.profilesRepo.save(newProfile);
 
             // Refetch with relations
