@@ -23,4 +23,8 @@ export class CloudinaryService {
         );
         return { timestamp, signature, apiKey: this.configService.get('CLOUDINARY_API_KEY'), cloudName: this.configService.get('CLOUDINARY_CLOUD_NAME') };
     }
+
+    async deleteImage(publicId: string) {
+        return cloudinary.uploader.destroy(publicId);
+    }
 }

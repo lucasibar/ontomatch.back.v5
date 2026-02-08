@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Request, Delete, Param } from '@nestjs/common';
 import { ProfilesService } from './profiles.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -21,5 +21,15 @@ export class ProfilesController {
     @Post('photos')
     async addPhoto(@Request() req, @Body() body: { url: string; publicId: string }) {
         return this.profilesService.addPhoto(req.user.id, body.url, body.publicId);
+    }
+
+    @Delete('photos/:id')
+    async deletePhoto(@Request() req, @Param('id') photoId: string) {
+        return this.profilesService.deletePhoto(req.user.id, photoId);
+    }
+
+    @Post('photos/reorder')
+    async reorderPhotos(@Request() req, @Body() body: { photoIds: string[] }) {
+        return this.profilesService.reorderPhotos(req.user.id, body.photoIds);
     }
 }

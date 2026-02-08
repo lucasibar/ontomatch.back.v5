@@ -5,11 +5,13 @@ import { ProfilePhoto } from './entities/profile-photo.entity';
 import { ProfilesService } from './profiles.service';
 import { ProfilesController } from './profiles.controller';
 import { LocationsModule } from '../locations/locations.module';
+import { MediaModule } from '../media/media.module';
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([Profile, ProfilePhoto]),
-        LocationsModule
+        LocationsModule,
+        MediaModule
     ],
     controllers: [ProfilesController],
     providers: [ProfilesService],

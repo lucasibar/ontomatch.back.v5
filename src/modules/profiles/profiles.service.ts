@@ -5,6 +5,7 @@ import { Profile } from './entities/profile.entity';
 import { ProfilePhoto } from './entities/profile-photo.entity';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { Location } from '../locations/entities/location.entity';
+import { CloudinaryService } from '../media/cloudinary.service';
 
 @Injectable()
 export class ProfilesService {
@@ -15,6 +16,7 @@ export class ProfilesService {
         private photosRepo: Repository<ProfilePhoto>,
         @InjectRepository(Location)
         private locationsRepo: Repository<Location>,
+        private cloudinaryService: CloudinaryService, // Injected
     ) { }
 
     async getMyProfile(userId: string) {
@@ -77,5 +79,38 @@ export class ProfilesService {
         }
 
         return photo;
+    }
+
+    async deletePhoto(userId: string, photoId: string) {
+        const photo = await this.photosRepo.findOne({ where: { id: photoId, user_id: userId } });
+        if (!photo) throw new Error('Photo not found');
+
+        // Delete from Cloudinary
+        if (photo.publicId) {
+            await this.cloudinaryService.deleteImage(photo.publicId);
+        }
+
+        // Delete from DB
+        await this.photosRepo.remove(photo);
+
+        // Update onboarded status
+        const count = await this.photosRepo.count({ where: { user_id: userId } });
+        if (count < 3) {
+            await this.profilesRepo.update(userId, { isOnboarded: false });
+        }
+
+        return { deleted: true, remaining: count };
+    }
+
+    async reorderPhotos(userId: string, photoIds: string[]) {
+        // Naive implementation: iterate and update
+        // Ensure all photos belong to user
+        for (let i = 0; i < photoIds.length; i++) {
+            await this.photosRepo.update(
+                { id: photoIds[i], user_id: userId },
+                { position: i + 1 }
+            );
+        }
+        return { success: true };
     }
 }
