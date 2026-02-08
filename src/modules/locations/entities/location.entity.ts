@@ -2,7 +2,6 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, Unique, Index
 import type { Point } from 'geojson';
 
 @Entity('locations')
-@Unique('unique_location', ['province', 'locality'])
 export class Location {
     @PrimaryGeneratedColumn('uuid')
     id: string;
