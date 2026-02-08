@@ -6,6 +6,7 @@ export enum Gender {
     MALE = 'male',
     FEMALE = 'female',
     NON_BINARY = 'non_binary',
+    OTHER = 'other',
 }
 
 export enum Orientation {
@@ -47,11 +48,17 @@ export class Profile {
     @Index('idx_profiles_birthdate')
     birthdate: Date;
 
+    @Column('int', { nullable: true })
+    height: number; // New: Altura (cm)
+
     @Column({ type: 'enum', enum: Gender })
     gender: Gender;
 
-    @Column({ type: 'enum', enum: Orientation })
-    orientation: Orientation;
+    @Column({ nullable: true, name: 'gender_custom' })
+    genderCustom: string; // New: Specify if other
+
+    @Column({ type: 'enum', enum: Orientation, nullable: true })
+    orientation: Orientation; // Made nullable as usually not requested in new spec
 
     @Column('text')
     bio: string;
@@ -64,6 +71,9 @@ export class Profile {
 
     @Column({ name: 'location_text' })
     locationText: string;
+
+    @Column({ name: 'neighborhood', nullable: true })
+    neighborhood: string; // New: Barrio / Zona
 
     @Column('double precision', { nullable: true })
     lat: number;
