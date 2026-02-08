@@ -20,7 +20,7 @@ export class ProfilesService {
     async getMyProfile(userId: string) {
         return this.profilesRepo.findOne({
             where: { user_id: userId },
-            relations: ['user'], // adjust as needed
+            relations: ['user', 'user.photos'], // adjust as needed
         });
     }
 
