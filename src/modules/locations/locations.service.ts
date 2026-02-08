@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 import { Location } from './entities/location.entity';
 
 @Injectable()
@@ -11,14 +11,15 @@ export class LocationsService {
     ) { }
 
     async search(query: string) {
-        if (!query) return [];
+        if (!query || query.length < 3) return []; // Minimum 3 chars to search
 
-        // ILIKE for case insensitive
         return this.repo.find({
-            where: {
-                locality: Like(`${query}%`) // Only prefix match for performance or `%${query}%` for fuzzy
-            },
+            where: [
+                { locality: ILike(`%${query}%`) },
+                { province: ILike(`%${query}%`) }
+            ],
             take: 10,
+            order: { locality: 'ASC' }
         });
     }
 }
