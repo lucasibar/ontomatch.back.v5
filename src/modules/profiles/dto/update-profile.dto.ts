@@ -1,27 +1,50 @@
-import { IsString, IsNotEmpty, IsDateString, IsEnum, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsDateString, IsEnum, IsOptional, IsNumber, Min } from 'class-validator';
 import { Gender, Orientation, LookingFor } from '../entities/profile.entity';
 
 export class UpdateProfileDto {
     @IsString()
     @IsNotEmpty()
-    name: string;
+    @IsOptional()
+    name?: string;
 
     @IsDateString()
-    birthdate: Date;
+    @IsOptional()
+    birthdate?: Date;
+
+    @IsNumber()
+    @Min(0)
+    @IsOptional()
+    height?: number;
 
     @IsEnum(Gender)
-    gender: Gender;
-
-    @IsEnum(Orientation)
-    orientation: Orientation;
-
-    @IsString()
-    bio: string;
-
-    @IsEnum(LookingFor)
-    lookingFor: LookingFor;
+    @IsOptional()
+    gender?: Gender;
 
     @IsString()
     @IsOptional()
-    locationId?: string; // We'll look this up in database
+    genderCustom?: string;
+
+    @IsEnum(Orientation)
+    @IsOptional()
+    orientation?: Orientation;
+
+    @IsString()
+    @IsOptional()
+    bio?: string;
+
+    @IsEnum(LookingFor)
+    @IsOptional()
+    lookingFor?: LookingFor;
+
+    @IsString()
+    @IsOptional()
+    locationText?: string;
+
+    @IsString()
+    @IsOptional()
+    locationId?: string;
+
+    @IsString()
+    @IsOptional()
+    neighborhood?: string;
 }

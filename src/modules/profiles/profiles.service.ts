@@ -25,36 +25,35 @@ export class ProfilesService {
     }
 
     async update(userId: string, dto: UpdateProfileDto) {
-        // Check if profile exists, if not create
         let profile = await this.profilesRepo.findOne({ where: { user_id: userId } });
 
         if (!profile) {
             profile = this.profilesRepo.create({ user_id: userId });
         }
 
-        // Map basic fields
-        profile.name = dto.name;
-        profile.birthdate = new Date(dto.birthdate);
-        profile.gender = dto.gender;
-        profile.orientation = dto.orientation;
-        profile.bio = dto.bio;
-        profile.looking_for = dto.lookingFor;
-        // Mark as onboarded only if photos exist? Or handled separately.
-        // For now, if we have basic info + location, we can set part of onboarded.
-        // Ideally is_onboarded = true only when photos >= 3
+        if (dto.name) profile.name = dto.name;
+        if (dto.birthdate) profile.birthdate = new Date(dto.birthdate);
+        if (dto.gender) profile.gender = dto.gender;
+        if (dto.genderCustom !== undefined) profile.genderCustom = dto.genderCustom;
+        if (dto.orientation) profile.orientation = dto.orientation;
+        if (dto.bio) profile.bio = dto.bio;
+        if (dto.lookingFor) profile.looking_for = dto.lookingFor;
+        if (dto.height) profile.height = dto.height;
+        if (dto.neighborhood) profile.neighborhood = dto.neighborhood;
 
-        // Handle Location
         if (dto.locationId) {
             const location = await this.locationsRepo.findOne({ where: { id: dto.locationId } });
             if (location) {
-                profile.locationText = location.locality;
+                profile.locationText = location.locality; // Default text
                 profile.lat = location.lat;
                 profile.lon = location.lon;
                 profile.geom = location.geom;
             }
         }
 
-        // Save
+        // Allow overriding location text specifically (e.g. slight correction)
+        if (dto.locationText) profile.locationText = dto.locationText;
+
         return await this.profilesRepo.save(profile);
     }
 
