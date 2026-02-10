@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 
@@ -11,11 +11,16 @@ export class AuthService {
 
     async validateUser(email: string, pass: string): Promise<any> {
         const user = await this.usersService.findByEmail(email);
-        if (user && this.usersService.verifyPassword(pass, user.passwordHash)) {
-            const { passwordHash, ...result } = user;
-            return result;
+        if (!user) {
+            throw new NotFoundException('El email no está registrado');
         }
-        return null;
+
+        if (!this.usersService.verifyPassword(pass, user.passwordHash)) {
+            throw new UnauthorizedException('Contraseña incorrecta');
+        }
+
+        const { passwordHash, ...result } = user;
+        return result;
     }
 
     async login(user: any) {
