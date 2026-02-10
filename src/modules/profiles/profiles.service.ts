@@ -33,6 +33,7 @@ export class ProfilesService {
                 birthdate: new Date('2000-01-01'),
                 gender: Gender.OTHER,
                 bio: '',
+                locationText: 'Unknown',
             });
             await this.profilesRepo.save(newProfile);
 
