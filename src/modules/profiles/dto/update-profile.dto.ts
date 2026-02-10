@@ -28,10 +28,6 @@ export class UpdateProfileDto {
     @IsOptional()
     genderCustom?: string;
 
-    @IsEnum(Orientation)
-    @IsOptional()
-    orientation?: Orientation;
-
     @IsString()
     @IsOptional()
     bio?: string;

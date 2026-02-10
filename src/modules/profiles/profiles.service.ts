@@ -58,11 +58,11 @@ export class ProfilesService {
         if (dto.birthdate) profile.birthdate = new Date(dto.birthdate);
         if (dto.gender) profile.gender = dto.gender;
         if (dto.genderCustom !== undefined) profile.genderCustom = dto.genderCustom;
-        if (dto.orientation) profile.orientation = dto.orientation;
         if (dto.bio) profile.bio = dto.bio;
         if (dto.lookingFor) profile.looking_for = dto.lookingFor;
         if (dto.height) profile.height = dto.height;
         if (dto.neighborhood) profile.neighborhood = dto.neighborhood;
+        if (dto.isOnboarded !== undefined) profile.isOnboarded = dto.isOnboarded;
 
         if (dto.locationId) {
             const location = await this.locationsRepo.findOne({ where: { id: dto.locationId } });
