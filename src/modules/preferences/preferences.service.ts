@@ -19,7 +19,13 @@ export class PreferencesService {
     async update(userId: string, dto: UpdatePreferencesDto) {
         let preference = await this.findOne(userId);
         if (!preference) {
-            preference = this.preferencesRepo.create({ user_id: userId });
+            preference = this.preferencesRepo.create({
+                user_id: userId,
+                distanceKm: 50,
+                ageMin: 18,
+                ageMax: 99,
+                gendersAllowed: []
+            });
         }
 
         Object.assign(preference, dto);

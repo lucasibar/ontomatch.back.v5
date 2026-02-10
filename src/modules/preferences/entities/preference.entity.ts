@@ -1,9 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryColumn, Column, OneToOne, JoinColumn, UpdateDateColumn } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
 @Entity('preferences')
 export class Preference {
-    @PrimaryGeneratedColumn('uuid')
+    @PrimaryColumn('uuid')
     user_id: string;
 
     @OneToOne(() => User, (user) => user.preferences, { onDelete: 'CASCADE' })
