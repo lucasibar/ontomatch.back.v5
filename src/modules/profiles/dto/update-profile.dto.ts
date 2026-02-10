@@ -1,7 +1,11 @@
-import { IsString, IsNotEmpty, IsDateString, IsEnum, IsOptional, IsNumber, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsDateString, IsEnum, IsOptional, IsNumber, Min, IsBoolean } from 'class-validator';
 import { Gender, Orientation, LookingFor } from '../entities/profile.entity';
 
 export class UpdateProfileDto {
+    @IsBoolean()
+    @IsOptional()
+    isOnboarded?: boolean;
+
     @IsString()
     @IsNotEmpty()
     @IsOptional()
