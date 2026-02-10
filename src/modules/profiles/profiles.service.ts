@@ -124,14 +124,22 @@ export class ProfilesService {
     }
 
     async reorderPhotos(userId: string, photoIds: string[]) {
-        // Naive implementation: iterate and update
-        // Ensure all photos belong to user
-        for (let i = 0; i < photoIds.length; i++) {
-            await this.photosRepo.update(
-                { id: photoIds[i], user_id: userId },
-                { position: i + 1 }
-            );
-        }
+        await this.photosRepo.manager.transaction(async (manager) => {
+            // 1. Set temporary positions (negative) to avoid unique constraint violations
+            for (let i = 0; i < photoIds.length; i++) {
+                await manager.update(ProfilePhoto,
+                    { id: photoIds[i], user_id: userId },
+                    { position: -1 * (i + 1) }
+                );
+            }
+            // 2. Set final positions
+            for (let i = 0; i < photoIds.length; i++) {
+                await manager.update(ProfilePhoto,
+                    { id: photoIds[i], user_id: userId },
+                    { position: i + 1 }
+                );
+            }
+        });
         return { success: true };
     }
 }
