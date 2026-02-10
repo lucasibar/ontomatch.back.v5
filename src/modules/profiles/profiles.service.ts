@@ -94,10 +94,7 @@ export class ProfilesService {
 
         await this.photosRepo.save(photo);
 
-        // Check if ready to be onboarded
-        if (count + 1 >= 3) { // Require 3 photos
-            await this.profilesRepo.update(userId, { isOnboarded: true });
-        }
+
 
         return photo;
     }
