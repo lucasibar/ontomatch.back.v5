@@ -6,6 +6,8 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:5173',
+      'http://localhost:5174', // Vite fallback
+      'http://localhost:5175',
       ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : []),
       /^https:\/\/ontomatch-front-v5.*\.vercel\.app$/, // Allow Vercel preview URLs
     ],
