@@ -134,10 +134,15 @@ export class DiscoveryService {
         // Priority 2: Active Users (last_login_at DESC)
         // Priority 3: Distance (distance_km ASC)
 
-        // Fix: Use raw expression for 'is_liker' to avoid TypeORM looking for column metadata
-        query.orderBy('CASE WHEN liked_me.id IS NOT NULL THEN 1 ELSE 0 END', 'DESC');
+
+        // Fix (Active Users): 'u' is 'User' entity alias, 'last_login_at' is a column. TypeORM handles this.
         query.addOrderBy('u.last_login_at', 'DESC');
-        query.addOrderBy('distance_km', 'ASC');
+
+        // Fix (Distance): Use raw expression again to avoid TypeORM lookup failure on alias 'distance_km'
+        query.addOrderBy(
+            'ST_Distance(p.geom, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography) / 1000',
+            'ASC'
+        );
 
         // Secondary sort for stability
         query.addOrderBy('p.user_id', 'ASC');
