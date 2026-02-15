@@ -10,9 +10,9 @@ export class DiscoveryController {
     constructor(private readonly discoveryService: DiscoveryService) { }
 
     @Get('feed')
-    async getFeed(@Req() req: Request, @Query() dto: GetFeedDto) {
+    async getFeed(@Query() dto: GetFeedDto, @Req() req: Request) {
         // req.user is populated by JwtStrategy
         const userId = (req.user as any).userId;
-        return this.discoveryService.getFeed(userId, dto);
+        return this.discoveryService.getFeed(dto, userId);
     }
 }
