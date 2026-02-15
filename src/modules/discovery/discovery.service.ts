@@ -128,12 +128,14 @@ export class DiscoveryService {
             }
         }
 
+
         // --- SORTING ---
         // Priority 1: Likers (is_liker DESC)
         // Priority 2: Active Users (last_login_at DESC)
         // Priority 3: Distance (distance_km ASC)
 
-        query.orderBy('is_liker', 'DESC');
+        // Fix: Use raw expression for 'is_liker' to avoid TypeORM looking for column metadata
+        query.orderBy('CASE WHEN liked_me.id IS NOT NULL THEN 1 ELSE 0 END', 'DESC');
         query.addOrderBy('u.last_login_at', 'DESC');
         query.addOrderBy('distance_km', 'ASC');
 
