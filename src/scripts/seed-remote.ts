@@ -4,7 +4,7 @@ import { AppModule } from '../app.module';
 import { User } from '../modules/users/entities/user.entity';
 import { Profile, Gender, LookingFor, LocationMode, Orientation } from '../modules/profiles/entities/profile.entity';
 import { Preference } from '../modules/preferences/entities/preference.entity';
-import { ProfilePhoto } from '../modules/profiles/entities/profile.entity';
+import { ProfilePhoto } from '../modules/profiles/entities/profile-photo.entity';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Logger } from '@nestjs/common';
