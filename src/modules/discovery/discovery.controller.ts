@@ -12,7 +12,7 @@ export class DiscoveryController {
     @Get('feed')
     async getFeed(@Query() dto: GetFeedDto, @Req() req: Request) {
         // req.user is populated by JwtStrategy
-        const userId = (req.user as any).userId;
+        const userId = (req.user as any).id;
         return this.discoveryService.getFeed(dto, userId);
     }
 }

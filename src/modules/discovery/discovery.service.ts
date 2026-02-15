@@ -178,15 +178,25 @@ export class DiscoveryService {
         // --- STEP 3: Re-Sort in Memory ---
         // WHERE IN (...) does not respect order. We must re-sort based on `targetIds`.
         const profilesMap = new Map(profiles.map((p) => [p.user_id, p]));
-        const sortedProfiles = targetIds
-            .map((id) => profilesMap.get(id))
-            .filter((p) => !!p) as Profile[]; // Safety check
+        const rawMap = new Map(rawResults.map(r => [r.user_id, r]));
+
+        const finalData = targetIds.map(id => {
+            const profile = profilesMap.get(id);
+            if (!profile) return null;
+            const raw = rawMap.get(id);
+            return {
+                ...profile,
+                photos: profile.user?.photos || [],
+                distanceKm: raw ? raw.distance_km : null,
+                isLiker: raw ? (raw.is_liker === 1 || raw.is_liker === '1') : false,
+            };
+        }).filter(p => !!p);
 
         return {
-            data: sortedProfiles,
+            data: finalData as any,
             meta: {
-                total: rawResults.length, // Approximate for this page
-                count: sortedProfiles.length,
+                total: rawResults.length,
+                count: finalData.length,
                 limit,
                 hasNext: rawResults.length === limit,
                 cursor: null,
