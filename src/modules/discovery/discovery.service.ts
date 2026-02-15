@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Profile } from '../profiles/entities/profile.entity';
 import { GetFeedDto } from './dto/get-feed.dto';
-import { SwipeAction } from '../swipes/entities/swipe.entity';
+import { Swipe, SwipeAction } from '../swipes/entities/swipe.entity';
 
 interface FeedCursor {
     lastDistance: number;
@@ -55,7 +55,7 @@ export class DiscoveryService {
         // Identify "Likers": Users who have liked ME
         // We look for a swipe where swiper = candidate(p.user_id) AND target = ME(:userId) AND action = LIKE
         query.leftJoin(
-            'swipes',
+            Swipe,
             'liked_me',
             'liked_me.swiper_user_id = p.user_id AND liked_me.target_user_id = :userId AND liked_me.action = :likeAction',
             { userId, likeAction: SwipeAction.LIKE }
