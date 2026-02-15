@@ -134,7 +134,9 @@ export class DiscoveryService {
         // Priority 2: Active Users (last_login_at DESC)
         // Priority 3: Distance (distance_km ASC)
 
-
+        // Fix: Use QUOTED alias 'is_liker' to match addSelect alias and prevent TypeORM from parsing it
+        // or failing to project it in the DISTINCT wrapper (which caused the double comma error).
+        query.orderBy('"is_liker"', 'DESC');
 
         // Fix (Active Users): 'u' is 'User' entity alias. We MUST use the PROPERTY name 'lastLoginAt', not the column name 'last_login_at'.
         // TypeORM maps property -> column. If we use column name, it fails to find metadata.
