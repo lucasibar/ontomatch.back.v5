@@ -135,8 +135,9 @@ export class DiscoveryService {
         // Priority 3: Distance (distance_km ASC)
 
 
-        // Fix (Active Users): 'u' is 'User' entity alias, 'last_login_at' is a column. TypeORM handles this.
-        query.addOrderBy('u.last_login_at', 'DESC');
+        // Fix (Active Users): 'u' is 'User' entity alias. We MUST use the PROPERTY name 'lastLoginAt', not the column name 'last_login_at'.
+        // TypeORM maps property -> column. If we use column name, it fails to find metadata.
+        query.addOrderBy('u.lastLoginAt', 'DESC');
 
         // Fix (Distance): Use raw expression again to avoid TypeORM lookup failure on alias 'distance_km'
         query.addOrderBy(
