@@ -65,27 +65,29 @@ export class DiscoveryService {
         }
 
         // Filter by Distance
-        idsQuery.andWhere(
-            `ST_DWithin(
-             p.geom, 
-             ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography, 
-             :distanceMeters
-           )`,
-            {
-                lon: me.lon,
-                lat: me.lat,
-                distanceMeters: distanceKm * 1000,
-            }
-        );
+        // idsQuery.andWhere(
+        //     `ST_DWithin(
+        //      p.geom, 
+        //      ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography, 
+        //      :distanceMeters
+        //    )`,
+        //     {
+        //         lon: me.lon,
+        //         lat: me.lat,
+        //         distanceMeters: distanceKm * 1000,
+        //     }
+        // );
 
         // Calculate distance for sorting
-        idsQuery.addSelect(
-            `ST_Distance(
-             p.geom, 
-             ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography
-           ) / 1000`,
-            'distance_km'
-        );
+        // idsQuery.addSelect(
+        //     `ST_Distance(
+        //      p.geom, 
+        //      ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography
+        //    ) / 1000`,
+        //     'distance_km'
+        // );
+        // MOCK DISTANCE for now since we disabled filter
+        idsQuery.addSelect('0', 'distance_km');
 
         // --- EXCLUDE SWIPED USERS ---
         // Join with swipes where I am the swiper
@@ -113,37 +115,37 @@ export class DiscoveryService {
         );
 
         // --- FILTERS ---
-        const shouldExcludeInactive =
-            dto.excludeInactive !== false && (dto.excludeInactive as any) !== 'false';
-        if (shouldExcludeInactive) {
-            const dateThreshold = new Date();
-            dateThreshold.setDate(dateThreshold.getDate() - 30);
-            idsQuery.andWhere('u.last_login_at > :dateThreshold', { dateThreshold });
-        }
+        // const shouldExcludeInactive =
+        //     dto.excludeInactive !== false && (dto.excludeInactive as any) !== 'false';
+        // if (shouldExcludeInactive) {
+        //     const dateThreshold = new Date();
+        //     dateThreshold.setDate(dateThreshold.getDate() - 30);
+        //     idsQuery.andWhere('u.last_login_at > :dateThreshold', { dateThreshold });
+        // }
 
-        if (minAge || maxAge) {
-            const now = new Date();
-            if (minAge) {
-                const minDate = new Date(
-                    now.getFullYear() - minAge,
-                    now.getMonth(),
-                    now.getDate()
-                );
-                idsQuery.andWhere('p.birthdate <= :minDate', { minDate });
-            }
-            if (maxAge) {
-                const maxDate = new Date(
-                    now.getFullYear() - maxAge - 1,
-                    now.getMonth(),
-                    now.getDate()
-                );
-                idsQuery.andWhere('p.birthdate > :maxDate', { maxDate });
-            }
-        }
+        // if (minAge || maxAge) {
+        //     const now = new Date();
+        //     if (minAge) {
+        //         const minDate = new Date(
+        //             now.getFullYear() - minAge,
+        //             now.getMonth(),
+        //             now.getDate()
+        //         );
+        //         idsQuery.andWhere('p.birthdate <= :minDate', { minDate });
+        //     }
+        //     if (maxAge) {
+        //         const maxDate = new Date(
+        //             now.getFullYear() - maxAge - 1,
+        //             now.getMonth(),
+        //             now.getDate()
+        //         );
+        //         idsQuery.andWhere('p.birthdate > :maxDate', { maxDate });
+        //     }
+        // }
 
-        if (genders && genders.length > 0) {
-            idsQuery.andWhere('p.gender IN (:...genders)', { genders });
-        }
+        // if (genders && genders.length > 0) {
+        //     idsQuery.andWhere('p.gender IN (:...genders)', { genders });
+        // }
 
         // --- SORTING ---
         // Explicitly use the alias names we defined in addSelect/select
