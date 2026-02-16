@@ -18,6 +18,10 @@ export class UsersService {
         });
     }
 
+    async findOne(id: string): Promise<User | null> {
+        return this.usersRepository.findOne({ where: { id } });
+    }
+
     async create(email: string, password: string): Promise<User> {
         const salt = randomBytes(16).toString('hex');
         const hashedPassword = scryptSync(password, salt, 64).toString('hex');
