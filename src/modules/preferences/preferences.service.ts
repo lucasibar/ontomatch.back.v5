@@ -17,7 +17,7 @@ export class PreferencesService {
     }
 
     async update(userId: string, dto: UpdatePreferencesDto) {
-        console.log('QueryBuilder Update for:', userId, 'Payload:', dto);
+        // console.log('QueryBuilder Update for:', userId, 'Payload:', dto);
 
         const values: any = {};
         if (dto.ageMin !== undefined) values.ageMin = dto.ageMin;
