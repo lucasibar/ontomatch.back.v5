@@ -2,7 +2,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module';
 import { User } from '../modules/users/entities/user.entity';
-import { Profile, Gender, LookingFor, LocationMode, Orientation } from '../modules/profiles/entities/profile.entity';
+import { Profile, Gender, LookingFor, LocationMode } from '../modules/profiles/entities/profile.entity';
 import { Preference } from '../modules/preferences/entities/preference.entity';
 import { ProfilePhoto } from '../modules/profiles/entities/profile-photo.entity';
 import { Repository } from 'typeorm';
@@ -46,7 +46,6 @@ async function bootstrap() {
         profile.name = faker.person.firstName();
         profile.birthdate = faker.date.birthdate({ min: 18, max: 40, mode: 'age' });
         profile.gender = faker.helpers.arrayElement([Gender.MALE, Gender.FEMALE]);
-        profile.orientation = Orientation.HETEROSEXUAL;
         profile.looking_for = LookingFor.RELATIONSHIP;
         profile.bio = faker.person.bio();
         profile.height = faker.number.int({ min: 150, max: 200 });
