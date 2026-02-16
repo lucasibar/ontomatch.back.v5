@@ -57,9 +57,6 @@ export class Profile {
     @Column({ nullable: true, name: 'gender_custom' })
     genderCustom: string; // New: Specify if other
 
-    @Column({ type: 'enum', enum: Orientation, nullable: true, default: Orientation.OTHER })
-    orientation: Orientation;
-
     @Column('text')
     bio: string;
 

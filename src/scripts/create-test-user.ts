@@ -2,7 +2,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module';
 import { User } from '../modules/users/entities/user.entity';
-import { Profile, Gender, LookingFor, LocationMode, Orientation } from '../modules/profiles/entities/profile.entity';
+import { Profile, Gender, LookingFor, LocationMode } from '../modules/profiles/entities/profile.entity';
 import { Preference } from '../modules/preferences/entities/preference.entity';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -48,7 +48,6 @@ async function bootstrap() {
         profile.name = 'Test User';
         profile.birthdate = new Date('1990-01-01');
         profile.gender = Gender.MALE;
-        profile.orientation = Orientation.HETEROSEXUAL;
         profile.looking_for = LookingFor.RELATIONSHIP;
         profile.bio = 'Testing the feed';
         profile.height = 180;

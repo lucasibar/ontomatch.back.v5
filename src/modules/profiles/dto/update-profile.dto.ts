@@ -1,5 +1,5 @@
 import { IsString, IsNotEmpty, IsDateString, IsEnum, IsOptional, IsNumber, Min, IsBoolean } from 'class-validator';
-import { Gender, Orientation, LookingFor } from '../entities/profile.entity';
+import { Gender, LookingFor } from '../entities/profile.entity';
 
 export class UpdateProfileDto {
     @IsBoolean()

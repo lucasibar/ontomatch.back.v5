@@ -86,7 +86,6 @@ export class DiscoveryService {
            ) / 1000`,
             'distance_km'
         );
-        // MOCK DISTANCE for now since we disabled filter
         // idsQuery.addSelect('0', 'distance_km');
 
         // --- EXCLUDE SWIPED USERS ---

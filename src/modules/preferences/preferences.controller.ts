@@ -11,11 +11,13 @@ export class PreferencesController {
 
     @Get('me')
     getMe(@Request() req) {
-        return this.preferencesService.findOne(req.user.userId);
+        return this.preferencesService.findOne(req.user.id);
     }
 
     @Patch('me')
     updateMe(@Request() req, @Body() dto: UpdatePreferencesDto) {
-        return this.preferencesService.update(req.user.userId, dto);
+        console.log('PATCH /preferences/me - User:', req.user.id);
+        console.log('Payload:', dto);
+        return this.preferencesService.update(req.user.id, dto);
     }
 }
