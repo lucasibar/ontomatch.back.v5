@@ -22,38 +22,47 @@ export class ConversationsService {
             .leftJoinAndSelect('userHigh.photos', 'photosHigh')
             .leftJoinAndSelect('conv.messages', 'messages')
             .where('match.userLowId = :userId OR match.userHighId = :userId', { userId })
-            // .orderBy('conv.lastMessageAt', 'DESC') // Ensure field exists or use updated_at
-            .orderBy('conv.updatedAt', 'DESC')
+            .orderBy('conv.lastMessageAt', 'DESC')
+            .addOrderBy('conv.createdAt', 'DESC')
             .getMany();
 
-        return conversations.map(conv => {
-            const isLow = conv.match.userLowId === userId;
-            const partner = isLow ? conv.match.userHigh : conv.match.userLow;
+        return conversations
+            .filter(conv => conv.match && (conv.match.userLow || conv.match.userHigh)) // Filter out broken matches
+            .map(conv => {
+                const isLow = conv.match.userLowId === userId;
+                const partner = isLow ? conv.match.userHigh : conv.match.userLow;
 
-            // Sort photos
-            const photos = partner.photos || [];
-            photos.sort((a, b) => a.position - b.position);
+                if (!partner) {
+                    // Should be caught by filter, but safe guard
+                    return null;
+                }
 
-            // Get last message (in memory sort for now)
-            const lastMsg = conv.messages && conv.messages.length > 0
-                ? conv.messages.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]
-                : null;
+                // Sort photos
+                const photos = partner.photos || [];
+                photos.sort((a, b) => a.position - b.position);
 
-            return {
-                id: conv.id,
-                partner: {
-                    id: partner.id,
-                    name: partner.profile?.name || 'Unknown',
-                    photoUrl: photos.length > 0 ? photos[0].url : null,
-                },
-                lastMessage: lastMsg ? {
-                    body: lastMsg.body,
-                    createdAt: lastMsg.createdAt,
-                    senderId: lastMsg.senderUserId
-                } : null,
-                updatedAt: conv.lastMessageAt
-            };
-        });
+                // Get last message (in memory sort for now)
+                const lastMsg = conv.messages && conv.messages.length > 0
+                    ? conv.messages.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]
+                    : null;
+
+                return {
+                    id: conv.id,
+                    partner: {
+                        id: partner.id,
+                        name: partner.profile?.name || 'Unknown',
+                        photoUrl: photos.length > 0 ? photos[0].url : null,
+                    },
+                    lastMessage: lastMsg ? {
+                        body: lastMsg.body,
+                        createdAt: lastMsg.createdAt,
+                        senderId: lastMsg.senderUserId
+                    } : null,
+                    updatedAt: conv.lastMessageAt || conv.createdAt
+                };
+            })
+            .filter(item => item !== null); // Remove nulls from map
+
     }
 
     async canAccess(userId: string, conversationId: string): Promise<boolean> {
