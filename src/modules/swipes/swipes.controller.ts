@@ -2,7 +2,7 @@ import { Controller, Post, Body, UseGuards, Req } from '@nestjs/common';
 import { SwipesService } from './swipes.service';
 import { CreateSwipeDto } from './dto/create-swipe.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { Request } from 'express';
+import type { Request } from 'express';
 
 @Controller('swipes')
 @UseGuards(JwtAuthGuard)
