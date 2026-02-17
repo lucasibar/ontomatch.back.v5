@@ -13,7 +13,7 @@ export class UpdateProfileDto {
 
     @IsDateString()
     @IsOptional()
-    birthdate?: Date;
+    birthdate?: string;
 
     @IsNumber()
     @Min(0)
