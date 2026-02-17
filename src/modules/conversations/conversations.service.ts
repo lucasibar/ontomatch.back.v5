@@ -65,6 +65,19 @@ export class ConversationsService {
 
     }
 
+    async findMessages(conversationId: string) {
+        const conversation = await this.repo.findOne({
+            where: { id: conversationId },
+            relations: ['messages']
+        });
+
+        if (!conversation || !conversation.messages) {
+            return [];
+        }
+
+        return conversation.messages.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+    }
+
     async canAccess(userId: string, conversationId: string): Promise<boolean> {
         // Implementation: Check if userId is one of the users in match linked to conversation
         const conv = await this.repo.findOne({
