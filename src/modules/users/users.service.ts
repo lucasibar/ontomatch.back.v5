@@ -48,4 +48,8 @@ export class UsersService {
         const keyBuffer = Buffer.from(key, 'hex');
         return timingSafeEqual(hashedBuffer, keyBuffer);
     }
+
+    async updateLastLogin(id: string): Promise<void> {
+        await this.usersRepository.update(id, { last_login_at: new Date() });
+    }
 }

@@ -26,6 +26,10 @@ export class AuthService {
     async login(user: any) {
         // user passed here is what validateUser returns (without password)
         const payload = { email: user.email, sub: user.id, userId: user.id };
+
+        // Update last login
+        await this.usersService.updateLastLogin(user.id);
+
         return {
             access_token: this.jwtService.sign(payload),
             user: {
