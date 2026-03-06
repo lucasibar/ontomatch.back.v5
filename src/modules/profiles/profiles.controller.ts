@@ -32,4 +32,9 @@ export class ProfilesController {
     async reorderPhotos(@Request() req, @Body() body: { photoIds: string[] }) {
         return this.profilesService.reorderPhotos(req.user.id, body.photoIds);
     }
+
+    @Get(':id')
+    async getById(@Param('id') userId: string) {
+        return this.profilesService.getById(userId);
+    }
 }

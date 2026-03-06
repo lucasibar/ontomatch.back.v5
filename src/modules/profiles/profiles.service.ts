@@ -47,6 +47,20 @@ export class ProfilesService {
         return profile;
     }
 
+    async getById(userId: string) {
+        const profile = await this.profilesRepo.findOne({
+            where: { user_id: userId },
+            relations: ['user', 'user.photos'],
+        });
+
+        if (!profile) return null;
+
+        return {
+            ...profile,
+            photos: profile.user?.photos || [],
+        };
+    }
+
     async update(userId: string, dto: UpdateProfileDto) {
         let profile = await this.profilesRepo.findOne({ where: { user_id: userId } });
 
