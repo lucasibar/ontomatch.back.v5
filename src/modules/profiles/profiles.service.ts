@@ -62,6 +62,7 @@ export class ProfilesService {
         if (dto.lookingFor) profile.looking_for = dto.lookingFor;
         if (dto.height) profile.height = dto.height;
         if (dto.neighborhood) profile.neighborhood = dto.neighborhood;
+        if (dto.coachingSchool) profile.coachingSchool = dto.coachingSchool;
         if (dto.isOnboarded !== undefined) profile.isOnboarded = dto.isOnboarded;
 
         if (dto.locationId) {

@@ -47,4 +47,9 @@ export class UpdateProfileDto {
     @IsString()
     @IsOptional()
     neighborhood?: string;
+
+    @IsString()
+    @IsOptional()
+    coachingSchool?: string;
 }
+

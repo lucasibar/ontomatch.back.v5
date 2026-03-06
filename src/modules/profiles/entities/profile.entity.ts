@@ -87,7 +87,11 @@ export class Profile {
     })
     geom: Point;
 
+    @Column({ nullable: true, name: 'coaching_school' })
+    coachingSchool: string;
+
     @Column({ default: false, name: 'is_onboarded' })
+
     @Index('idx_profiles_onboarded', { where: 'is_onboarded = true' })
     isOnboarded: boolean;
 
