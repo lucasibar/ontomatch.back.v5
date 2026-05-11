@@ -21,7 +21,13 @@ export class ConversationsService {
             .leftJoinAndSelect('userHigh.profile', 'profileHigh')
             .leftJoinAndSelect('userHigh.photos', 'photosHigh')
             .leftJoinAndSelect('conv.messages', 'messages')
-            .where('match.userLowId = :userId OR match.userHighId = :userId', { userId })
+            .where('(match.userLowId = :userId OR match.userHighId = :userId)', { userId })
+            // Exclude suspended partners
+            .andWhere(`(
+                (match.userLowId = :userId AND userHigh.status != 'suspended') 
+                OR 
+                (match.userHighId = :userId AND userLow.status != 'suspended')
+            )`)
             .orderBy('conv.lastMessageAt', 'DESC')
             .addOrderBy('conv.createdAt', 'DESC')
             .getMany();

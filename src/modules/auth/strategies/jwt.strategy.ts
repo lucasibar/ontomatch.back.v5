@@ -27,6 +27,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         if (!user) {
             throw new UnauthorizedException();
         }
+        if (user.status === 'suspended') {
+            throw new UnauthorizedException('Su cuenta ha sido suspendida por múltiples reportes.');
+        }
         return { id: payload.sub, email: payload.email }; // req.user
     }
 }

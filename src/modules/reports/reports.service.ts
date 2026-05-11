@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Report } from './entities/report.entity';
 import { User } from '../users/entities/user.entity';
+import { BlocksService } from '../blocks/blocks.service';
 
 @Injectable()
 export class ReportsService {
@@ -11,6 +12,7 @@ export class ReportsService {
         private reportsRepository: Repository<Report>,
         @InjectRepository(User)
         private usersRepository: Repository<User>,
+        private blocksService: BlocksService,
     ) {}
 
     async reportUser(reporterId: string, reportedId: string, reason: string): Promise<Report> {
@@ -44,6 +46,9 @@ export class ReportsService {
             }
             await this.usersRepository.save(reportedUser);
         }
+
+        // Auto-block the reported user so the reporter doesn't see them anymore
+        await this.blocksService.blockUser(reporterId, reportedId);
 
         return savedReport;
     }
