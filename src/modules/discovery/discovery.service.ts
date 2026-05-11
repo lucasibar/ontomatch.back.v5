@@ -62,10 +62,17 @@ export class DiscoveryService {
         });
 
         if (!me || !me.lat || !me.lon) {
-            throw new BadRequestException(
-                'User location not found. Please set location before discovery.'
-            );
+            // Gracefully return empty feed instead of crashing
+            return {
+                data: [],
+                meta: { total: 0, count: 0, limit, hasNext: false, cursor: null },
+            };
         }
+
+        // Ensure my own geom is set (auto-heal)
+        await this.profilesRepo.query(
+            `UPDATE profiles SET geom = ST_SetSRID(ST_MakePoint(lon, lat), 4326)::geography WHERE geom IS NULL AND lat IS NOT NULL AND lon IS NOT NULL`
+        );
 
         // Filter by Distance
         idsQuery.andWhere(

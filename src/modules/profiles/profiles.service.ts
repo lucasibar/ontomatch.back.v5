@@ -85,14 +85,28 @@ export class ProfilesService {
                 profile.locationText = location.locality; // Default text
                 profile.lat = location.lat;
                 profile.lon = location.lon;
-                profile.geom = location.geom;
+                // Always compute geom from lat/lon to guarantee it's set
+                if (location.geom) {
+                    profile.geom = location.geom;
+                }
             }
         }
 
         // Allow overriding location text specifically (e.g. slight correction)
         if (dto.locationText) profile.locationText = dto.locationText;
 
-        return await this.profilesRepo.save(profile);
+        // Save the profile first
+        const saved = await this.profilesRepo.save(profile);
+
+        // Ensure geom is always computed from lat/lon (failsafe)
+        if (saved.lat && saved.lon) {
+            await this.profilesRepo.query(
+                `UPDATE profiles SET geom = ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography WHERE user_id = $3`,
+                [saved.lon, saved.lat, userId]
+            );
+        }
+
+        return saved;
     }
 
     async addPhoto(userId: string, url: string, publicId: string) {
