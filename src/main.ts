@@ -16,8 +16,9 @@ async function bootstrap() {
       'http://localhost:5173',
       'http://localhost:5174', // Vite fallback
       'http://localhost:5175',
+      'https://ontomatch.vercel.app',
       ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : []),
-      /^https:\/\/ontomatch-front-v5.*\.vercel\.app$/, // Allow Vercel preview URLs
+      /^https:\/\/ontomatch.*\.vercel\.app$/, // Allow any Vercel preview URLs for ontomatch
     ],
     credentials: true,
   });
