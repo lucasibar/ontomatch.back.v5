@@ -15,7 +15,6 @@ import { BlocksModule } from './modules/blocks/blocks.module';
 import { MediaModule } from './modules/media/media.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { DiscoveryModule } from './modules/discovery/discovery.module';
-// import { ChatModule } from './modules/chat/chat.module'; // If exists
 import databaseConfig from './config/database.config';
 import { validate } from './config/env.validation';
 

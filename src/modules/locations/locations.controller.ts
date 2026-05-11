@@ -3,6 +3,7 @@ import { LocationsService } from './locations.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('locations')
+@UseGuards(JwtAuthGuard)
 export class LocationsController {
     constructor(private readonly service: LocationsService) { }
 

@@ -13,7 +13,6 @@ import { AdminModule } from '../admin/admin.module';
         UsersModule,
         AdminModule,
         PassportModule,
-        PassportModule,
         JwtModule.registerAsync({
             imports: [ConfigModule],
             inject: [ConfigService],
