@@ -52,7 +52,8 @@ export class DiscoveryService {
             .leftJoin('users', 'u', 'u.id = p.user_id')
             .where('p.user_id != :userId', { userId })
             .andWhere('p.is_onboarded = true')
-            .andWhere('u.status != :suspended', { suspended: 'suspended' }); // Ignore suspended users
+            .andWhere('u.status != :suspended', { suspended: 'suspended' })
+            .andWhere('u.email != :adminEmail', { adminEmail: process.env.ADMIN_EMAIL || '' }); // Never show admin in feed
 
         // --- SCOPE: GEOMETRY & LOCATION ---
         // Get my location

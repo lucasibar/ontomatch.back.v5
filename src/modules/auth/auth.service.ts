@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
+import { AdminService } from '../admin/admin.service';
 
 @Injectable()
 export class AuthService {
     constructor(
         private jwtService: JwtService,
-        private usersService: UsersService
+        private usersService: UsersService,
+        private adminService: AdminService,
     ) { }
 
     async validateUser(email: string, pass: string): Promise<any> {
@@ -42,8 +44,15 @@ export class AuthService {
 
     async register(userDto: any) {
         const user = await this.usersService.create(userDto.email, userDto.password);
+
+        // Create welcome chat with the admin account
+        try {
+            await this.adminService.createWelcomeChat(user.id);
+        } catch (e) {
+            console.error('Failed to create welcome chat:', e);
+            // Don't block registration if welcome chat fails
+        }
+
         return this.login(user);
     }
-
-    // TODO: Implement register, google login, etc.
 }

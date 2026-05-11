@@ -20,6 +20,7 @@ import databaseConfig from './config/database.config';
 import { validate } from './config/env.validation';
 
 import { ReportsModule } from './modules/reports/reports.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { ReportsModule } from './modules/reports/reports.module';
     MessagesModule,
     BlocksModule,
     ReportsModule,
+    AdminModule,
     MediaModule,
     DiscoveryModule
   ],
