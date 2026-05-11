@@ -20,6 +20,12 @@ export class User {
     @Column({ default: false, name: 'is_email_verified' })
     isEmailVerified: boolean;
 
+    @Column({ default: 'active' })
+    status: string;
+
+    @Column({ default: 0, name: 'report_count' })
+    reportCount: number;
+
     @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;
 

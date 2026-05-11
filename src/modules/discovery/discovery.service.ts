@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Profile } from '../profiles/entities/profile.entity';
 import { GetFeedDto } from './dto/get-feed.dto';
 import { Swipe, SwipeAction } from '../swipes/entities/swipe.entity';
+import { BlocksService } from '../blocks/blocks.service';
 
 
 export interface PaginatedResult<T> {
@@ -28,9 +29,10 @@ export class DiscoveryService {
     constructor(
         @InjectRepository(Profile)
         private profilesRepo: Repository<Profile>,
+        private blocksService: BlocksService,
     ) { }
 
-    async getFeed(dto: GetFeedDto, userId: string): Promise<PaginatedResult<Profile>> {
+    async getFeed(dto: GetFeedDto, userId: string, isRetry: boolean = false): Promise<PaginatedResult<Profile>> {
         const {
             distanceKm = 100, // Default 100km
             limit = 10,
@@ -49,7 +51,8 @@ export class DiscoveryService {
             .addSelect('u.last_login_at', 'last_login_at') // For sorting
             .leftJoin('users', 'u', 'u.id = p.user_id')
             .where('p.user_id != :userId', { userId })
-            .andWhere('p.is_onboarded = true');
+            .andWhere('p.is_onboarded = true')
+            .andWhere('u.status != :suspended', { suspended: 'suspended' }); // Ignore suspended users
 
         // --- SCOPE: GEOMETRY & LOCATION ---
         // Get my location
@@ -98,6 +101,12 @@ export class DiscoveryService {
         );
         // Exclude if I already swiped them
         idsQuery.andWhere('my_swipes.id IS NULL');
+
+        // --- EXCLUDE BLOCKED USERS ---
+        const blockedIds = await this.blocksService.getBlockedUserIds(userId);
+        if (blockedIds.length > 0) {
+            idsQuery.andWhere('p.user_id NOT IN (:...blockedIds)', { blockedIds });
+        }
 
         // --- SMART FEED LOGIC: Priority to people who Liked Me ---
         idsQuery.leftJoin(
@@ -159,6 +168,19 @@ export class DiscoveryService {
         const rawResults = await idsQuery.getRawMany();
 
         if (rawResults.length === 0) {
+            if (!isRetry) {
+                // Auto-reset passes if we ran out of profiles!
+                const deleted = await this.profilesRepo.manager.delete(Swipe, {
+                    swiperUserId: userId,
+                    action: SwipeAction.PASS
+                });
+                
+                if (deleted.affected && deleted.affected > 0) {
+                    console.log(`Auto-resetting ${deleted.affected} PASS swipes for user ${userId}`);
+                    return this.getFeed(dto, userId, true);
+                }
+            }
+
             return {
                 data: [],
                 meta: { total: 0, count: 0, limit, hasNext: false, cursor: null },

@@ -19,6 +19,8 @@ import { DiscoveryModule } from './modules/discovery/discovery.module';
 import databaseConfig from './config/database.config';
 import { validate } from './config/env.validation';
 
+import { ReportsModule } from './modules/reports/reports.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -37,6 +39,7 @@ import { validate } from './config/env.validation';
     ConversationsModule,
     MessagesModule,
     BlocksModule,
+    ReportsModule,
     MediaModule,
     DiscoveryModule
   ],
