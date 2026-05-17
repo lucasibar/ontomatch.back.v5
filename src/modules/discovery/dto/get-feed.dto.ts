@@ -39,6 +39,17 @@ export class GetFeedDto {
     genders?: string[];
 
     @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    @Transform(({ value }) => {
+        if (typeof value === 'string') {
+            return value.split(',');
+        }
+        return value;
+    })
+    gendersCustom?: string[];
+
+    @IsOptional()
     @IsBoolean()
     @Transform(({ value }) => value === 'true' || value === true)
     excludeInactive?: boolean;

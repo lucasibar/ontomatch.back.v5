@@ -19,10 +19,9 @@ export enum Orientation {
 }
 
 export enum LookingFor {
-    SESSIONS_1_ON_1 = 'sessions_1_on_1',
-    NETWORKING = 'networking',
-    RELATIONSHIP = 'relationship',
-    CASUAL = 'casual',
+    SERIOUS = 'serious',
+    CASUAL_DATING = 'casual_dating',
+    SHORT_TERM = 'short_term',
     UNSPECIFIED = 'unspecified',
 }
 

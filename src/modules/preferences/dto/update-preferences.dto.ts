@@ -25,4 +25,9 @@ export class UpdatePreferencesDto {
     @IsArray()
     @IsString({ each: true })
     gendersAllowed?: string[];
+
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    gendersAllowedCustom?: string[];
 }

@@ -22,6 +22,9 @@ export class Preference {
     @Column('text', { array: true, name: 'genders_allowed' })
     gendersAllowed: string[];
 
+    @Column('text', { array: true, name: 'genders_allowed_custom', nullable: true })
+    gendersAllowedCustom: string[];
+
     @UpdateDateColumn({ name: 'updated_at' })
     updatedAt: Date;
 }

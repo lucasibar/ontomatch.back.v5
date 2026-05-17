@@ -160,7 +160,24 @@ export class DiscoveryService {
         }
 
         if (genders && genders.length > 0) {
-            idsQuery.andWhere('p.gender IN (:...genders)', { genders });
+            if (genders.includes('other') && dto.gendersCustom && dto.gendersCustom.length > 0) {
+                const nonOtherGenders = genders.filter(g => g !== 'other');
+                const lowerCustoms = dto.gendersCustom.map(g => g.trim().toLowerCase());
+                
+                if (nonOtherGenders.length > 0) {
+                    idsQuery.andWhere(
+                        `(p.gender IN (:...nonOtherGenders) OR (p.gender = 'other' AND LOWER(p.gender_custom) IN (:...gendersCustom)))`,
+                        { nonOtherGenders, gendersCustom: lowerCustoms }
+                    );
+                } else {
+                    idsQuery.andWhere(
+                        `(p.gender = 'other' AND LOWER(p.gender_custom) IN (:...gendersCustom))`,
+                        { gendersCustom: lowerCustoms }
+                    );
+                }
+            } else {
+                idsQuery.andWhere('p.gender IN (:...genders)', { genders });
+            }
         }
 
         // --- SORTING ---
