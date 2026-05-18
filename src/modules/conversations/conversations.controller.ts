@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Request, Param } from '@nestjs/common';
+import { Controller, Get, UseGuards, Request, Param, ForbiddenException } from '@nestjs/common';
 import { ConversationsService } from './conversations.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -19,6 +19,10 @@ export class ConversationsController {
 
     @Get(':id/messages')
     async getMessages(@Request() req, @Param('id') id: string) {
+        const canAccess = await this.conversationsService.canAccess(req.user.id, id);
+        if (!canAccess) {
+            throw new ForbiddenException('No tienes acceso a esta conversación');
+        }
         return this.conversationsService.findMessages(id);
     }
 }

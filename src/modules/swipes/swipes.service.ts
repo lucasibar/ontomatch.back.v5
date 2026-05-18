@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { Swipe, SwipeAction } from './entities/swipe.entity';
 import { Match } from '../matches/entities/match.entity';
@@ -12,11 +12,11 @@ export class SwipesService {
     async create(swiperId: string, dto: CreateSwipeDto) {
         const { targetUserId, action } = dto;
 
-        return await this.dataSource.transaction(async (manager) => {
-            // 1. Create Swipe (Idempotent via unique constraint)
-            // We use upsert or ignore if exists, or just save and catch error
-            // Ideally check if exists first to avoid error spam
+        if (swiperId === targetUserId) {
+            throw new BadRequestException('No podés realizar un swipe sobre vos mismo');
+        }
 
+        return await this.dataSource.transaction(async (manager) => {
             const existing = await manager.findOne(Swipe, {
                 where: { swiperUserId: swiperId, targetUserId }
             });
@@ -33,7 +33,6 @@ export class SwipesService {
             let matchId: string | null = null;
             let conversationId: string | null = null;
 
-            // 2. Check for MATCH
             if (action === SwipeAction.LIKE) {
                 const reverseSwipe = await manager.findOne(Swipe, {
                     where: {
@@ -44,11 +43,8 @@ export class SwipesService {
                 });
 
                 if (reverseSwipe) {
-                    // IT'S A MATCH!
-                    // 3. Create Match Record (Ordered IDs)
                     const [low, high] = [swiperId, targetUserId].sort();
 
-                    // Check consistency (shouldn't exist if transaction is clean)
                     let match = await manager.findOne(Match, {
                         where: { userLowId: low, userHighId: high }
                     });
@@ -59,7 +55,6 @@ export class SwipesService {
                             userHighId: high
                         });
 
-                        // 4. Create Conversation
                         const conv = await manager.save(Conversation, {
                             matchId: match.id
                         });

@@ -62,10 +62,8 @@ export class AdminService {
             return;
         }
 
-        // Don't create a welcome chat for the admin itself
         if (newUserId === adminId) return;
 
-        // Check if match already exists
         const [low, high] = [adminId, newUserId].sort();
         const existingMatch = await this.matchesRepo.findOne({
             where: { userLowId: low, userHighId: high }
@@ -78,7 +76,6 @@ export class AdminService {
 
         const WELCOME_MESSAGE = '¡Hola! 👋 Bienvenido/a a OntoMatch. Si tenés alguna pregunta, problema o sugerencia, escribinos por acá. ¡Estamos para ayudarte!';
 
-        // Create match + conversation + welcome message in a transaction
         await this.dataSource.transaction(async (manager) => {
             const match = await manager.save(Match, {
                 userLowId: low,
@@ -111,7 +108,6 @@ export class AdminService {
         const totalSwipes = await this.swipesRepo.count();
         const suspendedUsers = await this.usersRepo.count({ where: { status: 'suspended' } });
 
-        // Users registered in last 7 days
         const weekAgo = new Date();
         weekAgo.setDate(weekAgo.getDate() - 7);
         const recentUsers = await this.usersRepo
@@ -119,39 +115,72 @@ export class AdminService {
             .where('u.created_at > :weekAgo', { weekAgo })
             .getCount();
 
-        // Users active in last 7 days
         const activeUsers = await this.usersRepo
             .createQueryBuilder('u')
             .where('u.last_login_at > :weekAgo', { weekAgo })
             .getCount();
 
-        // Swipes in last 7 days
         const recentSwipes = await this.swipesRepo
             .createQueryBuilder('s')
             .where('s.created_at > :weekAgo', { weekAgo })
             .getCount();
 
-        // Matches in last 7 days
         const recentMatches = await this.matchesRepo
             .createQueryBuilder('m')
             .where('m.created_at > :weekAgo', { weekAgo })
             .getCount();
 
-        // Messages in last 7 days
         const recentMessages = await this.messagesRepo
             .createQueryBuilder('msg')
             .where('msg.created_at > :weekAgo', { weekAgo })
             .getCount();
 
-        // Match rate (matches / total likes)
         const totalLikes = await this.swipesRepo.count({ where: { action: 'LIKE' as any } });
         const matchRate = totalLikes > 0 ? ((totalMatches / totalLikes) * 100).toFixed(1) : '0';
 
-        // Avg messages per conversation
         const avgMessages = totalMatches > 0 ? (totalMessages / totalMatches).toFixed(1) : '0';
 
-        // Onboarding completion rate
         const onboardingRate = totalUsers > 0 ? ((onboardedProfiles / totalUsers) * 100).toFixed(1) : '0';
+
+        // Advanced coaching/dating specific metrics:
+        // 1. Average age of onboarded users
+        const ageResult = await this.profilesRepo
+            .createQueryBuilder('p')
+            .select('AVG(EXTRACT(YEAR FROM AGE(p.birthdate)))', 'avgAge')
+            .where('p.isOnboarded = true')
+            .getRawOne();
+        const avgAge = ageResult?.avgAge ? Math.round(Number(ageResult.avgAge)) : 0;
+
+        // 2. Gender distribution count
+        const genderStats = await this.profilesRepo
+            .createQueryBuilder('p')
+            .select('p.gender', 'gender')
+            .addSelect('COUNT(*)', 'count')
+            .where('p.isOnboarded = true')
+            .groupBy('p.gender')
+            .getRawMany();
+
+        // 3. Top Locations
+        const localityStats = await this.profilesRepo
+            .createQueryBuilder('p')
+            .select('p.locationText', 'locality')
+            .addSelect('COUNT(*)', 'count')
+            .where('p.isOnboarded = true')
+            .groupBy('p.locationText')
+            .orderBy('count', 'DESC')
+            .limit(3)
+            .getRawMany();
+
+        // 4. Top Coaching Schools
+        const schoolStats = await this.profilesRepo
+            .createQueryBuilder('p')
+            .select('p.coachingSchool', 'school')
+            .addSelect('COUNT(*)', 'count')
+            .where('p.isOnboarded = true AND p.coachingSchool IS NOT NULL AND p.coachingSchool != :empty', { empty: '' })
+            .groupBy('p.coachingSchool')
+            .orderBy('count', 'DESC')
+            .limit(3)
+            .getRawMany();
 
         return {
             overview: {
@@ -173,13 +202,18 @@ export class AdminService {
                 matchRate: `${matchRate}%`,
                 avgMessagesPerMatch: avgMessages,
                 onboardingCompletion: `${onboardingRate}%`,
+            },
+            demographics: {
+                avgAge,
+                genders: genderStats.map(g => ({ gender: g.gender, count: Number(g.count) })),
+                topLocalities: localityStats.map(l => ({ locality: l.locality, count: Number(l.count) })),
+                topSchools: schoolStats.map(s => ({ school: s.school, count: Number(s.count) }))
             }
         };
     }
 
     /**
      * Get all conversations for admin (support view).
-     * Returns ALL conversations in the system, not just admin's matches.
      */
     async getAllConversations() {
         const conversations = await this.conversationsRepo.createQueryBuilder('conv')

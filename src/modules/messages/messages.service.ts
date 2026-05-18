@@ -1,18 +1,24 @@
-
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Message } from './entities/message.entity';
 import { CreateMessageDto } from './dto/create-message.dto';
+import { ConversationsService } from '../conversations/conversations.service';
 
 @Injectable()
 export class MessagesService {
     constructor(
         @InjectRepository(Message)
         private messageRepo: Repository<Message>,
+        private conversationsService: ConversationsService,
     ) { }
 
     async create(userId: string, createMessageDto: CreateMessageDto) {
+        const canAccess = await this.conversationsService.canAccess(userId, createMessageDto.conversationId);
+        if (!canAccess) {
+            throw new ForbiddenException('No tienes acceso a esta conversación');
+        }
+
         const message = this.messageRepo.create({
             senderUserId: userId,
             conversation: { id: createMessageDto.conversationId }, // Link by ID
@@ -32,7 +38,6 @@ export class MessagesService {
     }
 
     async getLastMessages(conversationIds: string[]) {
-        // Optimization: Get last message for each conversation to show in list
-        // For now, simple approach
+        // Optimization placeholder
     }
 }

@@ -20,6 +20,10 @@ export class AuthService {
             throw new NotFoundException('El email no está registrado');
         }
 
+        if (user.status === 'suspended') {
+            throw new UnauthorizedException('Tu cuenta ha sido suspendida por incumplimiento de las normas de la comunidad.');
+        }
+
         if (!this.usersService.verifyPassword(pass, user.passwordHash)) {
             throw new UnauthorizedException('Contraseña incorrecta');
         }
