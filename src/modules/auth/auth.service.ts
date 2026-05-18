@@ -2,6 +2,8 @@ import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/co
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { AdminService } from '../admin/admin.service';
+import { EmailService } from './email.service';
+import { randomInt } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -9,6 +11,7 @@ export class AuthService {
         private jwtService: JwtService,
         private usersService: UsersService,
         private adminService: AdminService,
+        private emailService: EmailService,
     ) { }
 
     async validateUser(email: string, pass: string): Promise<any> {
@@ -54,5 +57,38 @@ export class AuthService {
         }
 
         return this.login(user);
+    }
+
+    async sendResetCode(email: string) {
+        const user = await this.usersService.findByEmail(email);
+        if (!user) {
+            // No revelamos si el email existe o no por seguridad
+            return;
+        }
+
+        const code = randomInt(100000, 999999).toString();
+        const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutos
+
+        await this.usersService.saveResetCode(email, code, expiry);
+        await this.emailService.sendResetCode(email, code);
+    }
+
+    async resetUserPassword(email: string, code: string, newPassword: string) {
+        const user = await this.usersService.findByEmail(email);
+        if (!user) {
+            throw new UnauthorizedException('Código inválido');
+        }
+
+        if (!user.resetCode || user.resetCode !== code) {
+            throw new UnauthorizedException('Código inválido');
+        }
+
+        if (new Date() > user.resetCodeExpiry) {
+            throw new UnauthorizedException('El código expiró. Solicitá uno nuevo.');
+        }
+
+        await this.usersService.updatePassword(email, newPassword);
+        // Limpiar el código usado
+        await this.usersService.saveResetCode(email, null, null);
     }
 }

@@ -52,4 +52,19 @@ export class UsersService {
     async updateLastLogin(id: string): Promise<void> {
         await this.usersRepository.update(id, { lastLoginAt: new Date() });
     }
+
+    async updatePassword(email: string, newPassword: string): Promise<void> {
+        const salt = randomBytes(16).toString('hex');
+        const hashedPassword = scryptSync(newPassword, salt, 64).toString('hex');
+        const passwordHash = `${salt}:${hashedPassword}`;
+        
+        await this.usersRepository.update({ email }, { passwordHash });
+    }
+
+    async saveResetCode(email: string, code: string | null, expiry: Date | null): Promise<void> {
+        await this.usersRepository.update({ email }, { 
+            resetCode: code as any, 
+            resetCodeExpiry: expiry as any 
+        });
+    }
 }

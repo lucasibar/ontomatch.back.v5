@@ -38,6 +38,9 @@ class EnvironmentVariables {
 
     @IsString()
     CLOUDINARY_API_SECRET: string;
+
+    @IsString()
+    RESEND_API_KEY: string;
 }
 
 export function validate(config: Record<string, unknown>) {

@@ -35,6 +35,12 @@ export class User {
     @Column({ type: 'timestamptz', nullable: true, name: 'last_login_at' })
     lastLoginAt: Date;
 
+    @Column({ nullable: true, name: 'reset_code' })
+    resetCode: string;
+
+    @Column({ type: 'timestamptz', nullable: true, name: 'reset_code_expiry' })
+    resetCodeExpiry: Date;
+
     @OneToOne(() => Profile, (profile) => profile.user)
     profile: Profile;
 
