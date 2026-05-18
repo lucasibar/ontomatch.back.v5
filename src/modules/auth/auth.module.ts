@@ -14,6 +14,7 @@ import { EmailService } from './email.service';
         UsersModule,
         AdminModule,
         PassportModule,
+        ConfigModule,
         JwtModule.registerAsync({
             imports: [ConfigModule],
             inject: [ConfigService],
@@ -23,8 +24,8 @@ import { EmailService } from './email.service';
             }),
         }),
     ],
-    controllers: [AuthController], // To be created
+    controllers: [AuthController],
     providers: [AuthService, JwtStrategy, EmailService],
-    exports: [AuthService, JwtModule],
+    exports: [AuthService, JwtModule, EmailService],
 })
 export class AuthModule { }

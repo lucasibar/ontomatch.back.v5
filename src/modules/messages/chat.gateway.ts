@@ -91,10 +91,30 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         const savedMessage = await this.messagesService.create(userId, dto);
 
         // 2. Emit to Room (conversation)
-        // We use conv_${id} as the room name
         this.server.to(`conv_${dto.conversationId}`).emit('receiveMessage', savedMessage);
 
+        // 3. Emit real-time notification to the receiver's personal room
+        try {
+            const conv = await this.conversationsService.findOneWithMatch(dto.conversationId);
+            if (conv && conv.match) {
+                const receiverId = conv.match.userLowId === userId ? conv.match.userHighId : conv.match.userLowId;
+                this.server.to(`user_${receiverId}`).emit('newMessageNotification', {
+                    conversationId: dto.conversationId,
+                    message: savedMessage,
+                });
+            }
+        } catch (err) {
+            console.error('Failed to send real-time notification:', err);
+        }
+
         return savedMessage;
+    }
+
+    @SubscribeMessage('typing')
+    async handleTyping(@ConnectedSocket() client: Socket, @MessageBody() data: { conversationId: string; isTyping: boolean }) {
+        const userId = client.data.user.sub;
+        // Broadcast typing status to other participants in the same conversation
+        client.to(`conv_${data.conversationId}`).emit('userTyping', { userId, isTyping: data.isTyping });
     }
 
     private extractToken(client: Socket): string | undefined {

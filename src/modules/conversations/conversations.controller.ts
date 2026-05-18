@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Request, Param, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, UseGuards, Request, Param, ForbiddenException, Patch } from '@nestjs/common';
 import { ConversationsService } from './conversations.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -15,6 +15,12 @@ export class ConversationsController {
     @Get('support')
     findSupport(@Request() req) {
         return this.conversationsService.findSupportConversations(req.user.id);
+    }
+
+    @Patch(':id/read')
+    async markAsRead(@Request() req, @Param('id') id: string) {
+        await this.conversationsService.markAsRead(req.user.id, id);
+        return { success: true };
     }
 
     @Get(':id/messages')

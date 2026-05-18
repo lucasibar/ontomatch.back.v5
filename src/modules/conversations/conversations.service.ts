@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Conversation } from './entities/conversation.entity';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
-import { Swipe, SwipeAction } from '../swipes/entities/swipe.entity';
+import { Message } from '../messages/entities/message.entity';
 
 @Injectable()
 export class ConversationsService {
@@ -66,6 +66,9 @@ export class ConversationsService {
                     isSystemSupport = true;
                 }
 
+                // Compute unread count for this user
+                const unreadCount = conv.messages?.filter(msg => msg.senderUserId !== userId && !msg.readAt).length || 0;
+
                 return {
                     id: conv.id,
                     partner: {
@@ -81,6 +84,7 @@ export class ConversationsService {
                     } : null,
                     updatedAt: conv.lastMessageAt || conv.createdAt,
                     isSupportChat,
+                    unreadCount,
                 };
             })
             .filter(item => item !== null);
@@ -134,6 +138,8 @@ export class ConversationsService {
                     ? conv.messages.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]
                     : null;
 
+                const unreadCount = conv.messages?.filter(msg => msg.senderUserId !== userId && !msg.readAt).length || 0;
+
                 return {
                     id: conv.id,
                     partner: {
@@ -148,6 +154,7 @@ export class ConversationsService {
                     } : null,
                     updatedAt: conv.lastMessageAt || conv.createdAt,
                     isSupportChat: true,
+                    unreadCount,
                 };
             })
             .filter(item => item !== null);
@@ -174,5 +181,25 @@ export class ConversationsService {
         if (!conv || !conv.match) return false;
 
         return conv.match.userLowId === userId || conv.match.userHighId === userId;
+    }
+
+    async markAsRead(userId: string, conversationId: string): Promise<void> {
+        const canAccess = await this.canAccess(userId, conversationId);
+        if (!canAccess) throw new ForbiddenException('No tienes acceso a esta conversación');
+
+        await this.repo.manager.createQueryBuilder()
+            .update(Message)
+            .set({ readAt: new Date() })
+            .where('conversation_id = :conversationId', { conversationId })
+            .andWhere('sender_user_id != :userId', { userId })
+            .andWhere('read_at IS NULL')
+            .execute();
+    }
+
+    async findOneWithMatch(conversationId: string) {
+        return await this.repo.findOne({
+            where: { id: conversationId },
+            relations: ['match']
+        });
     }
 }
