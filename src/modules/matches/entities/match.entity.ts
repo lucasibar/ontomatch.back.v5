@@ -3,7 +3,7 @@ import { User } from '../../users/entities/user.entity';
 import { Conversation } from '../../conversations/entities/conversation.entity';
 
 @Entity('matches')
-@Unique(['userLowId', 'userHighId'])
+@Unique(['userLowId', 'userHighId', 'isSupport'])
 @Check(`"user_low_id" < "user_high_id"`)
 export class Match {
     @PrimaryGeneratedColumn('uuid')
@@ -22,6 +22,9 @@ export class Match {
     @ManyToOne(() => User, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_high_id' })
     userHigh: User;
+
+    @Column({ type: 'boolean', default: false, name: 'is_support' })
+    isSupport: boolean;
 
     @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;

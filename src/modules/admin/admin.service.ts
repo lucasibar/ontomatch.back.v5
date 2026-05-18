@@ -65,8 +65,8 @@ export class AdminService {
         if (newUserId === adminId) return;
 
         const [low, high] = [adminId, newUserId].sort();
-        const existingMatch = await this.matchesRepo.findOne({
-            where: { userLowId: low, userHighId: high }
+                const existingMatch = await this.matchesRepo.findOne({
+            where: { userLowId: low, userHighId: high, isSupport: true }
         });
 
         if (existingMatch) {
@@ -80,6 +80,7 @@ export class AdminService {
             const match = await manager.save(Match, {
                 userLowId: low,
                 userHighId: high,
+                isSupport: true,
             });
 
             const conversation = await manager.save(Conversation, {

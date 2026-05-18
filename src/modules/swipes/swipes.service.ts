@@ -46,13 +46,14 @@ export class SwipesService {
                     const [low, high] = [swiperId, targetUserId].sort();
 
                     let match = await manager.findOne(Match, {
-                        where: { userLowId: low, userHighId: high }
+                        where: { userLowId: low, userHighId: high, isSupport: false }
                     });
 
                     if (!match) {
                         match = await manager.save(Match, {
                             userLowId: low,
-                            userHighId: high
+                            userHighId: high,
+                            isSupport: false,
                         });
 
                         const conv = await manager.save(Conversation, {

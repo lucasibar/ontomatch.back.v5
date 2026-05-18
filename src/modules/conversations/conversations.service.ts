@@ -38,70 +38,55 @@ export class ConversationsService {
         const user = await this.repo.manager.findOne(User, { where: { id: userId } });
         const isAdmin = user?.email === adminEmail;
 
-        const mappedConversations = await Promise.all(
-            conversations
-                .filter(conv => conv.match && (conv.match.userLow || conv.match.userHigh))
-                .map(async (conv) => {
-                    const isLow = conv.match.userLowId === userId;
-                    const partner = isLow ? conv.match.userHigh : conv.match.userLow;
+        const mappedConversations = conversations
+            .filter(conv => conv.match && (conv.match.userLow || conv.match.userHigh))
+            .map((conv) => {
+                const isLow = conv.match.userLowId === userId;
+                const partner = isLow ? conv.match.userHigh : conv.match.userLow;
 
-                    if (!partner) return null;
+                if (!partner) return null;
 
-                    const photos = partner.photos || [];
-                    photos.sort((a, b) => a.position - b.position);
+                const photos = partner.photos || [];
+                photos.sort((a, b) => a.position - b.position);
 
-                    const lastMsg = conv.messages && conv.messages.length > 0
-                        ? conv.messages.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]
-                        : null;
+                const lastMsg = conv.messages && conv.messages.length > 0
+                    ? conv.messages.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]
+                    : null;
 
-                    // Check if there is a mutual match
-                    const likes = await this.repo.manager.find(Swipe, {
-                        where: [
-                            { swiperUserId: userId, targetUserId: partner.id, action: SwipeAction.LIKE },
-                            { swiperUserId: partner.id, targetUserId: userId, action: SwipeAction.LIKE }
-                        ]
-                    });
-                    const isMutual = likes.length === 2;
+                const isSupportChat = conv.match.isSupport;
 
-                    // For the admin: it's a support chat if not mutual
-                    let isSupportChat = false;
-                    if (isAdmin) {
-                        isSupportChat = !isMutual;
-                    }
+                // For standard users: if it is a support match, brand it as "OntoMatch"
+                let displayName = partner.profile?.name || 'Unknown';
+                let displayPhoto = photos.length > 0 ? photos[0].url : null;
+                let isSystemSupport = false;
 
-                    // For the standard user: if partner is the admin and not mutual, brand it as "OntoMatch"
-                    let displayName = partner.profile?.name || 'Unknown';
-                    let displayPhoto = photos.length > 0 ? photos[0].url : null;
-                    let isSystemSupport = false;
+                if (isSupportChat) {
+                    displayName = 'OntoMatch';
+                    displayPhoto = '/logo192.png'; // Or standard support avatar
+                    isSystemSupport = true;
+                }
 
-                    if (!isAdmin && partner.email === adminEmail && !isMutual) {
-                        displayName = 'OntoMatch';
-                        displayPhoto = '/logo192.png'; // Or standard support avatar
-                        isSystemSupport = true;
-                    }
-
-                    return {
-                        id: conv.id,
-                        partner: {
-                            id: partner.id,
-                            name: displayName,
-                            photoUrl: displayPhoto,
-                            isSystemSupport,
-                        },
-                        lastMessage: lastMsg ? {
-                            body: lastMsg.body,
-                            createdAt: lastMsg.createdAt,
-                            senderId: lastMsg.senderUserId
-                        } : null,
-                        updatedAt: conv.lastMessageAt || conv.createdAt,
-                        isSupportChat,
-                    };
-                })
-        );
+                return {
+                    id: conv.id,
+                    partner: {
+                        id: partner.id,
+                        name: displayName,
+                        photoUrl: displayPhoto,
+                        isSystemSupport,
+                    },
+                    lastMessage: lastMsg ? {
+                        body: lastMsg.body,
+                        createdAt: lastMsg.createdAt,
+                        senderId: lastMsg.senderUserId
+                    } : null,
+                    updatedAt: conv.lastMessageAt || conv.createdAt,
+                    isSupportChat,
+                };
+            })
+            .filter(item => item !== null);
 
         // Standard user sees everything. Admin sees their normal matches in standard list (filtered below)
         return mappedConversations
-            .filter(item => item !== null)
             .filter(item => {
                 if (isAdmin) {
                     // Only return non-support (mutual matches) in standard list
@@ -112,7 +97,7 @@ export class ConversationsService {
     }
 
     async findSupportConversations(userId: string) {
-        // Return support conversations (non-mutual) for the admin
+        // Return support conversations (where match.isSupport is true) for the admin
         const conversations = await this.repo.createQueryBuilder('conv')
             .leftJoinAndSelect('conv.match', 'match')
             .leftJoinAndSelect('match.userLow', 'userLow')
@@ -123,6 +108,8 @@ export class ConversationsService {
             .leftJoinAndSelect('userHigh.photos', 'photosHigh')
             .leftJoinAndSelect('conv.messages', 'messages')
             .where('(match.userLowId = :userId OR match.userHighId = :userId)', { userId })
+            .andWhere('match.is_support = true')
+            // Exclude suspended partners
             .andWhere(`(
                 (match.userLowId = :userId AND userHigh.status != 'suspended') 
                 OR 
@@ -132,51 +119,38 @@ export class ConversationsService {
             .addOrderBy('conv.createdAt', 'DESC')
             .getMany();
 
-        const mappedConversations = await Promise.all(
-            conversations
-                .filter(conv => conv.match && (conv.match.userLow || conv.match.userHigh))
-                .map(async (conv) => {
-                    const isLow = conv.match.userLowId === userId;
-                    const partner = isLow ? conv.match.userHigh : conv.match.userLow;
+        return conversations
+            .filter(conv => conv.match && (conv.match.userLow || conv.match.userHigh))
+            .map((conv) => {
+                const isLow = conv.match.userLowId === userId;
+                const partner = isLow ? conv.match.userHigh : conv.match.userLow;
 
-                    if (!partner) return null;
+                if (!partner) return null;
 
-                    const likes = await this.repo.manager.find(Swipe, {
-                        where: [
-                            { swiperUserId: userId, targetUserId: partner.id, action: SwipeAction.LIKE },
-                            { swiperUserId: partner.id, targetUserId: userId, action: SwipeAction.LIKE }
-                        ]
-                    });
-                    const isSupportChat = likes.length < 2;
+                const photos = partner.photos || [];
+                photos.sort((a, b) => a.position - b.position);
 
-                    if (!isSupportChat) return null;
+                const lastMsg = conv.messages && conv.messages.length > 0
+                    ? conv.messages.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]
+                    : null;
 
-                    const photos = partner.photos || [];
-                    photos.sort((a, b) => a.position - b.position);
-
-                    const lastMsg = conv.messages && conv.messages.length > 0
-                        ? conv.messages.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]
-                        : null;
-
-                    return {
-                        id: conv.id,
-                        partner: {
-                            id: partner.id,
-                            name: partner.profile?.name || 'Unknown',
-                            photoUrl: photos.length > 0 ? photos[0].url : null,
-                        },
-                        lastMessage: lastMsg ? {
-                            body: lastMsg.body,
-                            createdAt: lastMsg.createdAt,
-                            senderId: lastMsg.senderUserId
-                        } : null,
-                        updatedAt: conv.lastMessageAt || conv.createdAt,
-                        isSupportChat: true,
-                    };
-                })
-        );
-
-        return mappedConversations.filter(item => item !== null);
+                return {
+                    id: conv.id,
+                    partner: {
+                        id: partner.id,
+                        name: partner.profile?.name || 'Unknown',
+                        photoUrl: photos.length > 0 ? photos[0].url : null,
+                    },
+                    lastMessage: lastMsg ? {
+                        body: lastMsg.body,
+                        createdAt: lastMsg.createdAt,
+                        senderId: lastMsg.senderUserId
+                    } : null,
+                    updatedAt: conv.lastMessageAt || conv.createdAt,
+                    isSupportChat: true,
+                };
+            })
+            .filter(item => item !== null);
     }
 
     async findMessages(conversationId: string) {
