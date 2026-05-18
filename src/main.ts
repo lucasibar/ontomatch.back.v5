@@ -2,7 +2,6 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { json } from 'express';
-import { AdminService } from './modules/admin/admin.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -24,9 +23,5 @@ async function bootstrap() {
     credentials: true,
   });
   await app.listen(process.env.PORT ?? 3000);
-
-  // Ensure admin user exists on startup
-  const adminService = app.get(AdminService);
-  await adminService.ensureAdminExists();
 }
 bootstrap();

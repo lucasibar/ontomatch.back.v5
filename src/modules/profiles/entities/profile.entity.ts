@@ -9,31 +9,11 @@ export enum Gender {
     OTHER = 'other',
 }
 
-export enum Orientation {
-    HETEROSEXUAL = 'heterosexual',
-    HOMOSEXUAL = 'homosexual',
-    BISEXUAL = 'bisexual',
-    PANSEXUAL = 'pansexual',
-    ASEXUAL = 'asexual',
-    OTHER = 'other',
-}
-
 export enum LookingFor {
     SERIOUS = 'serious',
     CASUAL_DATING = 'casual_dating',
     SHORT_TERM = 'short_term',
     UNSPECIFIED = 'unspecified',
-    // Legacy values kept for database compatibility during migration
-    SESSIONS_1_ON_1 = 'sessions_1_on_1',
-    NETWORKING = 'networking',
-    RELATIONSHIP = 'relationship',
-    CASUAL = 'casual',
-}
-
-export enum LocationMode {
-    PRECISE = 'precise',
-    APPROXIMATE = 'approximate',
-    MANUAL = 'manual',
 }
 
 @Entity('profiles')
@@ -67,8 +47,7 @@ export class Profile {
     @Column({ type: 'enum', enum: LookingFor, default: LookingFor.UNSPECIFIED })
     looking_for: LookingFor;
 
-    @Column({ type: 'enum', enum: LocationMode, default: LocationMode.APPROXIMATE })
-    location_mode: LocationMode;
+
 
     @Column({ name: 'location_text' })
     locationText: string;
