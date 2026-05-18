@@ -46,7 +46,7 @@ async function bootstrap() {
         profile.name = faker.person.firstName();
         profile.birthdate = faker.date.birthdate({ min: 18, max: 40, mode: 'age' });
         profile.gender = faker.helpers.arrayElement([Gender.MALE, Gender.FEMALE]);
-        profile.looking_for = LookingFor.RELATIONSHIP;
+        profile.looking_for = LookingFor.SERIOUS;
         profile.bio = faker.person.bio();
         profile.height = faker.number.int({ min: 150, max: 200 });
 

@@ -62,8 +62,8 @@ async function bootstrap() {
         return user;
     };
 
-    const userA = await createUser('Alice', 'alice@chat.com', Gender.FEMALE, LookingFor.RELATIONSHIP);
-    const userB = await createUser('Bob', 'bob@chat.com', Gender.MALE, LookingFor.RELATIONSHIP);
+    const userA = await createUser('Alice', 'alice@chat.com', Gender.FEMALE, LookingFor.SERIOUS);
+    const userB = await createUser('Bob', 'bob@chat.com', Gender.MALE, LookingFor.SERIOUS);
 
     // Mutual Match
     logger.log('Creating mutual likes...');

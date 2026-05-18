@@ -48,7 +48,7 @@ async function bootstrap() {
         profile.name = 'Test User';
         profile.birthdate = new Date('1990-01-01');
         profile.gender = Gender.MALE;
-        profile.looking_for = LookingFor.RELATIONSHIP;
+        profile.looking_for = LookingFor.SERIOUS;
         profile.bio = 'Testing the feed';
         profile.height = 180;
         profile.lat = -34.6037;
