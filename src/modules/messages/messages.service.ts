@@ -24,7 +24,16 @@ export class MessagesService {
             conversation: { id: createMessageDto.conversationId }, // Link by ID
             body: createMessageDto.body,
         });
-        return await this.messageRepo.save(message);
+        const savedMessage = await this.messageRepo.save(message);
+
+        // Update the lastMessageAt field in the Conversation
+        try {
+            await this.conversationsService.updateLastMessageAt(createMessageDto.conversationId, savedMessage.createdAt);
+        } catch (err) {
+            console.error(`Failed to update lastMessageAt for conversation ${createMessageDto.conversationId}:`, err);
+        }
+
+        return savedMessage;
     }
 
     async findAll(conversationId: string, limit = 50, offset = 0) {

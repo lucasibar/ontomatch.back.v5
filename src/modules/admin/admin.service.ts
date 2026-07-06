@@ -225,17 +225,46 @@ export class AdminService {
             .leftJoinAndSelect('match.userHigh', 'userHigh')
             .leftJoinAndSelect('userHigh.profile', 'profileHigh')
             .leftJoinAndSelect('userHigh.photos', 'photosHigh')
-            .leftJoinAndSelect('conv.messages', 'messages')
             .orderBy('conv.lastMessageAt', 'DESC')
             .addOrderBy('conv.createdAt', 'DESC')
             .getMany();
 
+        const conversationIds = conversations.map(c => c.id);
+
+        let lastMessagesMap = new Map<string, any>();
+        let messageCountsMap = new Map<string, number>();
+
+        if (conversationIds.length > 0) {
+            // Get last messages
+            const lastMsgs = await this.conversationsRepo.manager.query(`
+                SELECT DISTINCT ON (conversation_id) conversation_id, body, created_at as "createdAt", sender_user_id as "senderUserId"
+                FROM messages
+                WHERE conversation_id = ANY($1)
+                ORDER BY conversation_id, created_at DESC
+            `, [conversationIds]);
+
+            for (const msg of lastMsgs) {
+                lastMessagesMap.set(msg.conversation_id, msg);
+            }
+
+            // Get total message counts
+            const counts = await this.conversationsRepo.manager.query(`
+                SELECT conversation_id, COUNT(*) as "count"
+                FROM messages
+                WHERE conversation_id = ANY($1)
+                GROUP BY conversation_id
+            `, [conversationIds]);
+
+            for (const countRow of counts) {
+                messageCountsMap.set(countRow.conversation_id, parseInt(countRow.count) || 0);
+            }
+        }
+
         return conversations
             .filter(conv => conv.match)
             .map(conv => {
-                const lastMsg = conv.messages?.length > 0
-                    ? conv.messages.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]
-                    : null;
+                const lastMsg = lastMessagesMap.get(conv.id);
+                const messageCount = messageCountsMap.get(conv.id) || 0;
 
                 const photosLow = conv.match.userLow?.photos || [];
                 photosLow.sort((a, b) => a.position - b.position);
@@ -256,10 +285,10 @@ export class AdminService {
                     },
                     lastMessage: lastMsg ? {
                         body: lastMsg.body,
-                        createdAt: lastMsg.createdAt,
+                        createdAt: new Date(lastMsg.createdAt),
                         senderUserId: lastMsg.senderUserId,
                     } : null,
-                    messageCount: conv.messages?.length || 0,
+                    messageCount: messageCount,
                     updatedAt: conv.lastMessageAt || conv.createdAt,
                 };
             });

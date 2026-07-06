@@ -24,6 +24,7 @@ export class PreferencesService {
         if (dto.ageMax !== undefined) values.ageMax = dto.ageMax;
         if (dto.distanceKm !== undefined) values.distanceKm = dto.distanceKm;
         if (dto.gendersAllowed !== undefined) values.gendersAllowed = dto.gendersAllowed;
+        if (dto.gendersAllowedCustom !== undefined) values.gendersAllowedCustom = dto.gendersAllowedCustom;
 
         // Explicitly update timestamp since helper bypasses hooks
         values.updatedAt = new Date();
@@ -42,7 +43,8 @@ export class PreferencesService {
                 distanceKm: dto.distanceKm ?? 50,
                 ageMin: dto.ageMin ?? 18,
                 ageMax: dto.ageMax ?? 99,
-                gendersAllowed: dto.gendersAllowed ?? []
+                gendersAllowed: dto.gendersAllowed ?? [],
+                gendersAllowedCustom: dto.gendersAllowedCustom ?? []
             });
             return this.preferencesRepo.save(newPref);
         }

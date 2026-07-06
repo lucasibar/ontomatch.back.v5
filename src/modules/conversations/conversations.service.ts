@@ -12,6 +12,10 @@ export class ConversationsService {
         private repo: Repository<Conversation>
     ) { }
 
+    async updateLastMessageAt(conversationId: string, lastMessageAt: Date): Promise<void> {
+        await this.repo.update(conversationId, { lastMessageAt });
+    }
+
     async findAll(userId: string) {
         // Get conversations where user is part of the match
         const conversations = await this.repo.createQueryBuilder('conv')
@@ -22,7 +26,6 @@ export class ConversationsService {
             .leftJoinAndSelect('match.userHigh', 'userHigh')
             .leftJoinAndSelect('userHigh.profile', 'profileHigh')
             .leftJoinAndSelect('userHigh.photos', 'photosHigh')
-            .leftJoinAndSelect('conv.messages', 'messages')
             .where('(match.userLowId = :userId OR match.userHighId = :userId)', { userId })
             // Exclude suspended partners
             .andWhere(`(
@@ -38,6 +41,37 @@ export class ConversationsService {
         const user = await this.repo.manager.findOne(User, { where: { id: userId } });
         const isAdmin = user?.email === adminEmail;
 
+        const conversationIds = conversations.map(c => c.id);
+        
+        let lastMessagesMap = new Map<string, any>();
+        let unreadCountsMap = new Map<string, number>();
+
+        if (conversationIds.length > 0) {
+            const lastMsgs = await this.repo.manager.query(`
+                SELECT DISTINCT ON (conversation_id) conversation_id, body, created_at as "createdAt", sender_user_id as "senderUserId"
+                FROM messages
+                WHERE conversation_id = ANY($1)
+                ORDER BY conversation_id, created_at DESC
+            `, [conversationIds]);
+
+            for (const msg of lastMsgs) {
+                lastMessagesMap.set(msg.conversation_id, msg);
+            }
+
+            const unreadCounts = await this.repo.manager.query(`
+                SELECT conversation_id, COUNT(*) as "count"
+                FROM messages
+                WHERE conversation_id = ANY($1)
+                  AND sender_user_id != $2
+                  AND read_at IS NULL
+                GROUP BY conversation_id
+            `, [conversationIds, userId]);
+
+            for (const countRow of unreadCounts) {
+                unreadCountsMap.set(countRow.conversation_id, parseInt(countRow.count) || 0);
+            }
+        }
+
         const mappedConversations = conversations
             .filter(conv => conv.match && (conv.match.userLow || conv.match.userHigh))
             .map((conv) => {
@@ -49,10 +83,7 @@ export class ConversationsService {
                 const photos = partner.photos || [];
                 photos.sort((a, b) => a.position - b.position);
 
-                const lastMsg = conv.messages && conv.messages.length > 0
-                    ? conv.messages.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]
-                    : null;
-
+                const lastMsg = lastMessagesMap.get(conv.id);
                 const isSupportChat = conv.match.isSupport;
 
                 // For standard users: if it is a support match, brand it as "OntoMatch"
@@ -67,7 +98,7 @@ export class ConversationsService {
                 }
 
                 // Compute unread count for this user
-                const unreadCount = conv.messages?.filter(msg => msg.senderUserId !== userId && !msg.readAt).length || 0;
+                const unreadCount = unreadCountsMap.get(conv.id) || 0;
 
                 return {
                     id: conv.id,
@@ -79,7 +110,7 @@ export class ConversationsService {
                     },
                     lastMessage: lastMsg ? {
                         body: lastMsg.body,
-                        createdAt: lastMsg.createdAt,
+                        createdAt: new Date(lastMsg.createdAt),
                         senderId: lastMsg.senderUserId
                     } : null,
                     updatedAt: conv.lastMessageAt || conv.createdAt,
@@ -110,7 +141,6 @@ export class ConversationsService {
             .leftJoinAndSelect('match.userHigh', 'userHigh')
             .leftJoinAndSelect('userHigh.profile', 'profileHigh')
             .leftJoinAndSelect('userHigh.photos', 'photosHigh')
-            .leftJoinAndSelect('conv.messages', 'messages')
             .where('(match.userLowId = :userId OR match.userHighId = :userId)', { userId })
             .andWhere('match.is_support = true')
             // Exclude suspended partners
@@ -123,6 +153,37 @@ export class ConversationsService {
             .addOrderBy('conv.createdAt', 'DESC')
             .getMany();
 
+        const conversationIds = conversations.map(c => c.id);
+        
+        let lastMessagesMap = new Map<string, any>();
+        let unreadCountsMap = new Map<string, number>();
+
+        if (conversationIds.length > 0) {
+            const lastMsgs = await this.repo.manager.query(`
+                SELECT DISTINCT ON (conversation_id) conversation_id, body, created_at as "createdAt", sender_user_id as "senderUserId"
+                FROM messages
+                WHERE conversation_id = ANY($1)
+                ORDER BY conversation_id, created_at DESC
+            `, [conversationIds]);
+
+            for (const msg of lastMsgs) {
+                lastMessagesMap.set(msg.conversation_id, msg);
+            }
+
+            const unreadCounts = await this.repo.manager.query(`
+                SELECT conversation_id, COUNT(*) as "count"
+                FROM messages
+                WHERE conversation_id = ANY($1)
+                  AND sender_user_id != $2
+                  AND read_at IS NULL
+                GROUP BY conversation_id
+            `, [conversationIds, userId]);
+
+            for (const countRow of unreadCounts) {
+                unreadCountsMap.set(countRow.conversation_id, parseInt(countRow.count) || 0);
+            }
+        }
+
         return conversations
             .filter(conv => conv.match && (conv.match.userLow || conv.match.userHigh))
             .map((conv) => {
@@ -134,11 +195,8 @@ export class ConversationsService {
                 const photos = partner.photos || [];
                 photos.sort((a, b) => a.position - b.position);
 
-                const lastMsg = conv.messages && conv.messages.length > 0
-                    ? conv.messages.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]
-                    : null;
-
-                const unreadCount = conv.messages?.filter(msg => msg.senderUserId !== userId && !msg.readAt).length || 0;
+                const lastMsg = lastMessagesMap.get(conv.id);
+                const unreadCount = unreadCountsMap.get(conv.id) || 0;
 
                 return {
                     id: conv.id,
@@ -149,7 +207,7 @@ export class ConversationsService {
                     },
                     lastMessage: lastMsg ? {
                         body: lastMsg.body,
-                        createdAt: lastMsg.createdAt,
+                        createdAt: new Date(lastMsg.createdAt),
                         senderId: lastMsg.senderUserId
                     } : null,
                     updatedAt: conv.lastMessageAt || conv.createdAt,
